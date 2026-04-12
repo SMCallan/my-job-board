@@ -1,4 +1,4 @@
-// src/App.jsx  —  DevSecOps Radar v2.1
+// src/App.jsx  —  DevSecOps Radar v2.1 (Final Build)
 import { useEffect, useState } from 'react'
 import './App.css'
 
@@ -62,7 +62,7 @@ export default function App() {
     return { label: 'Reed', cls: 'tag-reed' }
   }
 
-  /* Progress bar percentage for pagination */
+  /* Pagination and Progress logic */
   const total   = analytics?.totalActive || 0
   const pct     = total > 0 ? Math.min(Math.round((jobs.length / total) * 100), 100) : 0
   const hasMore = analytics && jobs.length < total
@@ -92,7 +92,7 @@ export default function App() {
                 <span className="stat-label">Active Roles</span>
               </div>
               <div className="stat-chip">
-                <span className="stat-number">{analytics.timeframe ?? '—'}</span>
+                <span className="stat-number">{analytics.timeframe ?? 'Last 14 Days'}</span>
                 <span className="stat-label">Timeframe</span>
               </div>
             </div>
@@ -104,6 +104,7 @@ export default function App() {
       <div className="app-shell">
         {/* ── SIDEBAR ────────────────────────────────────── */}
         <aside className="sidebar" aria-label="Search and overview">
+          
           {/* Search panel */}
           <div className="panel">
             <p className="panel-label">Search Roles</p>
@@ -135,6 +136,7 @@ export default function App() {
           {analytics && !loading && (
             <div className="panel" aria-label="Market overview">
               <p className="panel-label">Overview</p>
+              
               <div className="analytics-badges">
                 {/* Active roles */}
                 <div className="badge badge-default" role="status">
@@ -143,7 +145,7 @@ export default function App() {
                   <strong>{analytics.totalActive}</strong>
                 </div>
 
-                {/* Avg Perm */}
+                {/* Avg Perm Salary */}
                 {analytics.avgPerm && analytics.avgPerm !== 'N/A' && (
                   <div className="badge badge-success" role="status">
                     <span aria-hidden="true">💷</span>
@@ -152,13 +154,9 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Avg Contract */}
+                {/* Avg Contract Day Rate — Uses the badge-warning class from your CSS */}
                 {analytics.avgContract && analytics.avgContract !== 'N/A' && (
-                  <div 
-                    className="badge" 
-                    role="status" 
-                    style={{ backgroundColor: '#FFFBEB', color: '#B45309', borderColor: '#FEF3C7' }}
-                  >
+                  <div className="badge badge-warning" role="status">
                     <span aria-hidden="true">⏳</span>
                     <span className="badge-label">Avg Contract</span>
                     <strong>{analytics.avgContract}</strong>
@@ -226,6 +224,7 @@ export default function App() {
             </div>
           ) : (
             <>
+              {/* Job cards grid */}
               <div className="jobs-grid">
                 {jobs.map((job, i) => {
                   const src = getSource(job.id)
@@ -271,6 +270,7 @@ export default function App() {
                 })}
               </div>
 
+              {/* Load More section */}
               {hasMore && (
                 <div className="load-more-wrapper">
                   <p className="load-more-meta">
