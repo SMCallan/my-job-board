@@ -1,123 +1,440 @@
-/* src/App.css */
+/* ─── Google Fonts ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap');
+
+/* ─── Design Tokens ────────────────────────────────────────────── */
 :root {
-  --bg-color: #121212;
-  --card-bg: #1e1e1e;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --border: #27272a;
-}
+  /* Color Palette — Sage & Slate */
+  --bg:            #f5f4f0;
+  --surface:       #ffffff;
+  --surface-raised:#fdfcfa;
+  --border:        #e6e4df;
+  --border-subtle: #eeede9;
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* Dyslexia friendly spacing */
+  --ink:           #1c1c22;
+  --ink-2:         #4a4a56;
+  --ink-3:         #8a8a96;
+
+  --accent:        #1a5c4a;        /* deep emerald */
+  --accent-mid:    #2a8a6e;        /* mid emerald  */
+  --accent-light:  #e8f5f0;        /* tint         */
+  --accent-glow:   rgba(26,92,74,0.12);
+
+  --salary:        #0f6b52;
+  --salary-bg:     #edfaf5;
+
+  --tag-bg:        #f0f4ff;
+  --tag-ink:       #3b4db8;
+
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-hover:  0 8px 32px rgba(26,92,74,0.14), 0 2px 8px rgba(0,0,0,0.06);
+
+  --radius-sm:     8px;
+  --radius-md:     14px;
+  --radius-lg:     20px;
+
+  --font-display:  'Instrument Serif', Georgia, serif;
+  --font-body:     'Outfit', system-ui, sans-serif;
+
+  font-family: var(--font-body);
+  font-size: 16px;
   line-height: 1.6;
-  letter-spacing: 0.02em;
-  margin: 0;
-  padding: 0;
+  color: var(--ink-2);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+/* ─── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+body  { margin: 0; }
+h1, h2 { margin: 0; }
+p  { margin: 0; }
+a  { text-decoration: none; }
+
+/* ─── Noise texture overlay ────────────────────────────────────── */
+.noise-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
 }
 
-.dashboard-header {
-  margin-bottom: 3rem;
-  text-align: left;
-}
-
-.dashboard-header h1 {
-  font-size: 2.5rem;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.dashboard-header p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
-}
-
-/* The Magic Responsive Grid */
-.jobs-grid {
-  display: grid;
-  /* Automatically fits as many 300px columns as possible without media queries */
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.job-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
+/* ─── Page wrapper ──────────────────────────────────────────────── */
+.page-wrapper {
+  position: relative;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ADHD Friendly: Clear interaction states */
-.job-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  border-color: var(--accent);
+/* ─── Header ────────────────────────────────────────────────────── */
+.site-header {
+  position: relative;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
 
-.job-title {
-  font-size: 1.25rem;
+/* Decorative horizontal stripe */
+.site-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-mid) 50%, transparent 100%);
+}
+
+/* Subtle grid background on header */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.header-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px;
   font-weight: 600;
-  margin: 0 0 1rem 0;
-  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(26,92,74,0.2);
 }
 
-.job-details {
-  margin: 0 0 1.5rem 0;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-mid);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
-.job-details p {
-  margin: 0.5rem 0;
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.3); }
+}
+
+.site-title {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 7vw, 72px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--ink);
+}
+
+.title-flag {
+  display: inline-block;
+  margin-right: 6px;
+  font-style: normal;
+}
+
+.site-subtitle {
+  font-size: 16px;
+  color: var(--ink-3);
+  font-weight: 400;
+  max-width: 380px;
+}
+
+.header-stats {
   display: flex;
   align-items: center;
+  gap: 24px;
+  margin-top: 8px;
+  padding: 16px 20px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-body);
+  letter-spacing: -0.3px;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+}
+
+/* ─── Main ──────────────────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+/* ─── Grid ──────────────────────────────────────────────────────── */
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .jobs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .jobs-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* ─── Job Card ──────────────────────────────────────────────────── */
+.job-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: card-in 0.45s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle left accent bar */
+.job-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(26,92,74,0.25);
+}
+
+.job-card:hover::before {
+  opacity: 1;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Card Top row ──────────────────────────────────────────────── */
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.job-date {
-  font-size: 0.85rem;
-  color: #71717a;
-  margin-top: auto; /* Pushes the date to the bottom before the button */
-  margin-bottom: 1rem;
-}
-
-/* Accessible Button Target */
-.apply-button {
-  display: block;
-  width: 100%;
-  text-align: center;
-  padding: 0.875rem;
-  background-color: var(--accent);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
+.card-tag {
+  font-size: 11px;
   font-weight: 600;
-  transition: background-color 0.2s;
-  box-sizing: border-box;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tag-ink);
+  background: var(--tag-bg);
+  padding: 3px 10px;
+  border-radius: 100px;
 }
 
-.apply-button:hover, .apply-button:focus {
-  background-color: var(--accent-hover);
-  outline: none;
+.card-date {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 400;
 }
 
-/* Loader styling */
-.loader {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+/* ─── Card Title ────────────────────────────────────────────────── */
+.card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+  color: var(--ink);
+}
+
+/* ─── Card Meta ─────────────────────────────────────────────────── */
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta-company,
+.meta-salary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+}
+
+.meta-company {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.meta-company svg,
+.meta-salary svg {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.meta-salary {
+  color: var(--salary);
+  font-weight: 600;
+  background: var(--salary-bg);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  width: fit-content;
+}
+
+.meta-salary svg {
+  color: var(--salary);
+}
+
+/* ─── Apply Button ──────────────────────────────────────────────── */
+.apply-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 11px 20px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+}
+
+.apply-btn:hover {
+  background: var(--accent-mid);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(26,92,74,0.3);
+}
+
+.apply-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ─── Loading / Empty ───────────────────────────────────────────── */
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 20px;
+  color: var(--ink-3);
+  font-size: 15px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.empty-icon {
+  font-size: 40px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Footer ────────────────────────────────────────────────────── */
+.site-footer {
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
   text-align: center;
-  margin-top: 4rem;
+  font-size: 13px;
+  color: var(--ink-3);
+  background: var(--surface);
+}
+
+/* ─── Mobile overrides ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .header-inner {
+    padding: 32px 20px 28px;
+  }
+
+  .header-stats {
+    gap: 16px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .main-content {
+    padding: 24px 16px;
+  }
+
+  .site-footer {
+    padding: 20px 16px;
+  }
 }
