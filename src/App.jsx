@@ -72,7 +72,6 @@ export default function App() {
       {/* ── HERO HEADER ─────────────────────────────────── */}
       <header className="site-header">
         <div className="header-inner">
-
           <div className="brand-block">
             <p className="brand-eyebrow">
               <span className="eyebrow-dot" aria-hidden="true" />
@@ -98,16 +97,13 @@ export default function App() {
               </div>
             </div>
           )}
-
         </div>
       </header>
 
       {/* ── APP SHELL ────────────────────────────────────── */}
       <div className="app-shell">
-
         {/* ── SIDEBAR ────────────────────────────────────── */}
         <aside className="sidebar" aria-label="Search and overview">
-
           {/* Search panel */}
           <div className="panel">
             <p className="panel-label">Search Roles</p>
@@ -136,49 +132,47 @@ export default function App() {
           </div>
 
           {/* Analytics overview panel */}
-{analytics && !loading && (
-  <div className="panel" aria-label="Market overview">
-    <p className="panel-label">Overview</p>
+          {analytics && !loading && (
+            <div className="panel" aria-label="Market overview">
+              <p className="panel-label">Overview</p>
+              <div className="analytics-badges">
+                {/* Active roles */}
+                <div className="badge badge-default" role="status">
+                  <span aria-hidden="true">📡</span>
+                  <span className="badge-label">Active roles</span>
+                  <strong>{analytics.totalActive}</strong>
+                </div>
 
-    <div className="analytics-badges">
-      {/* Active roles */}
-      <div className="badge badge-default" role="status">
-        <span aria-hidden="true">📡</span>
-        <span className="badge-label">Active roles</span>
-        <strong>{analytics.totalActive}</strong>
-      </div>
+                {/* Avg Perm */}
+                {analytics.avgPerm && analytics.avgPerm !== 'N/A' && (
+                  <div className="badge badge-success" role="status">
+                    <span aria-hidden="true">💷</span>
+                    <span className="badge-label">Avg Perm</span>
+                    <strong>{analytics.avgPerm}</strong>
+                  </div>
+                )}
 
-      {/* ── NEW: PERMANENT SALARY BADGE ── */}
-      {analytics.avgPerm && analytics.avgPerm !== 'N/A' && (
-        <div className="badge badge-success" role="status">
-          <span aria-hidden="true">💷</span>
-          <span className="badge-label">Avg Perm</span>
-          <strong>{analytics.avgPerm}</strong>
-        </div>
-      )}
+                {/* Avg Contract */}
+                {analytics.avgContract && analytics.avgContract !== 'N/A' && (
+                  <div 
+                    className="badge" 
+                    role="status" 
+                    style={{ backgroundColor: '#FFFBEB', color: '#B45309', borderColor: '#FEF3C7' }}
+                  >
+                    <span aria-hidden="true">⏳</span>
+                    <span className="badge-label">Avg Contract</span>
+                    <strong>{analytics.avgContract}</strong>
+                  </div>
+                )}
 
-      {/* ── NEW: CONTRACT DAY RATE BADGE ── */}
-      {analytics.avgContract && analytics.avgContract !== 'N/A' && (
-        <div 
-          className="badge" 
-          role="status" 
-          style={{ backgroundColor: '#FFFBEB', color: '#B45309', borderColor: '#FEF3C7' }}
-        >
-          <span aria-hidden="true">⏳</span>
-          <span className="badge-label">Avg Contract</span>
-          <strong>{analytics.avgContract}</strong>
-        </div>
-      )}
-
-      {/* Top hirer */}
-      {analytics.topCompanies?.[0] && (
-        <div className="badge badge-alert" role="status">
-          <span aria-hidden="true">🏆</span>
-          <span className="badge-label">Top hirer</span>
-          <strong>{analytics.topCompanies[0]}</strong>
-        </div>
-      )}
-    </div>
+                {/* Top hirer */}
+                {analytics.topCompanies?.[0] && (
+                  <div className="badge badge-alert" role="status">
+                    <span aria-hidden="true">🏆</span>
+                    <span className="badge-label">Top hirer</span>
+                    <strong>{analytics.topCompanies[0]}</strong>
+                  </div>
+                )}
               </div>
 
               {/* Pagination meta */}
@@ -199,12 +193,10 @@ export default function App() {
               )}
             </div>
           )}
-
         </aside>
 
         {/* ── LISTINGS ─────────────────────────────────── */}
         <main aria-label="Job listings">
-
           <div className="listings-toolbar">
             <p className="listings-count">
               {loading
@@ -219,7 +211,6 @@ export default function App() {
             )}
           </div>
 
-          {/* ── States ── */}
           {loading ? (
             <div className="state-view" aria-live="polite">
               <div className="dot-loader" aria-hidden="true">
@@ -228,16 +219,13 @@ export default function App() {
               <p className="state-label">Scanning networks…</p>
               <p className="state-sublabel">Pulling live roles from the pipeline</p>
             </div>
-
           ) : jobs.length === 0 ? (
             <div className="state-view" aria-live="polite">
               <p className="state-label">No roles matched your search.</p>
               <p className="state-sublabel">Try a different keyword or clear the filter.</p>
             </div>
-
           ) : (
             <>
-              {/* ── Job cards ── */}
               <div className="jobs-grid">
                 {jobs.map((job, i) => {
                   const src = getSource(job.id)
@@ -247,13 +235,9 @@ export default function App() {
                       className="job-card"
                       style={{ animationDelay: `${Math.min(i, 20) * 0.045}s` }}
                     >
-                      {/* Header row: title + source tag */}
                       <div className="job-card-header">
                         <h2 className="job-title">{job.title}</h2>
-                        <span
-                          className={`source-tag ${src.cls}`}
-                          aria-label={`Source: ${src.label}`}
-                        >
+                        <span className={`source-tag ${src.cls}`} aria-label={`Source: ${src.label}`}>
                           {src.label}
                         </span>
                       </div>
@@ -270,10 +254,7 @@ export default function App() {
                       )}
 
                       <footer className="job-footer">
-                        <time
-                          className="job-date"
-                          dateTime={new Date(job.timestamp).toISOString()}
-                        >
+                        <time className="job-date" dateTime={new Date(job.timestamp).toISOString()}>
                           {fmt(job.timestamp)}
                         </time>
                         <a
@@ -281,7 +262,6 @@ export default function App() {
                           target="_blank"
                           rel="noreferrer noopener"
                           className="apply-btn"
-                          aria-label={`Apply for ${job.title} at ${job.company}`}
                         >
                           Apply Now →
                         </a>
@@ -291,35 +271,21 @@ export default function App() {
                 })}
               </div>
 
-              {/* ── Load More ── */}
               {hasMore && (
                 <div className="load-more-wrapper">
                   <p className="load-more-meta">
                     Showing {jobs.length} of {total} roles · {pct}% loaded
                   </p>
-                  <div
-                    className="load-more-track"
-                    role="progressbar"
-                    aria-valuenow={pct}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Roles loaded"
-                  >
+                  <div className="load-more-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
                     <div className="load-more-fill" style={{ width: `${pct}%` }} />
                   </div>
-                  <button
-                    className="btn-load-more"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    aria-label="Load next 50 roles"
-                  >
+                  <button className="btn-load-more" onClick={loadMore} disabled={loadingMore}>
                     {loadingMore ? 'Loading…' : 'Load Next 50 Roles ↓'}
                   </button>
                 </div>
               )}
             </>
           )}
-
         </main>
       </div>
     </>
