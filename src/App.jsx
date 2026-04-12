@@ -136,38 +136,49 @@ export default function App() {
           </div>
 
           {/* Analytics overview panel */}
-          {analytics && !loading && (
-            <div className="panel" aria-label="Market overview">
-              <p className="panel-label">Overview</p>
+{analytics && !loading && (
+  <div className="panel" aria-label="Market overview">
+    <p className="panel-label">Overview</p>
 
-              {/* ── Analytics badge pills ── */}
-              <div className="analytics-badges">
+    <div className="analytics-badges">
+      {/* Active roles */}
+      <div className="badge badge-default" role="status">
+        <span aria-hidden="true">📡</span>
+        <span className="badge-label">Active roles</span>
+        <strong>{analytics.totalActive}</strong>
+      </div>
 
-                {/* Active roles — cobalt brand */}
-                <div className="badge badge-default" role="status">
-                  <span aria-hidden="true">📡</span>
-                  <span className="badge-label">Active roles</span>
-                  <strong>{analytics.totalActive}</strong>
-                </div>
+      {/* ── NEW: PERMANENT SALARY BADGE ── */}
+      {analytics.avgPerm && analytics.avgPerm !== 'N/A' && (
+        <div className="badge badge-success" role="status">
+          <span aria-hidden="true">💷</span>
+          <span className="badge-label">Avg Perm</span>
+          <strong>{analytics.avgPerm}</strong>
+        </div>
+      )}
 
-                {/* Avg salary — emerald (positive signal) */}
-                {analytics.averageSalary && analytics.averageSalary !== 'N/A' && (
-                  <div className="badge badge-success" role="status">
-                    <span aria-hidden="true">💷</span>
-                    <span className="badge-label">Avg rate</span>
-                    <strong>{analytics.averageSalary}</strong>
-                  </div>
-                )}
+      {/* ── NEW: CONTRACT DAY RATE BADGE ── */}
+      {analytics.avgContract && analytics.avgContract !== 'N/A' && (
+        <div 
+          className="badge" 
+          role="status" 
+          style={{ backgroundColor: '#FFFBEB', color: '#B45309', borderColor: '#FEF3C7' }}
+        >
+          <span aria-hidden="true">⏳</span>
+          <span className="badge-label">Avg Contract</span>
+          <strong>{analytics.avgContract}</strong>
+        </div>
+      )}
 
-                {/* Top hirer — amber (notable, action-worthy) */}
-                {analytics.topCompanies?.[0] && (
-                  <div className="badge badge-alert" role="status">
-                    <span aria-hidden="true">🏆</span>
-                    <span className="badge-label">Top hirer</span>
-                    <strong>{analytics.topCompanies[0]}</strong>
-                  </div>
-                )}
-
+      {/* Top hirer */}
+      {analytics.topCompanies?.[0] && (
+        <div className="badge badge-alert" role="status">
+          <span aria-hidden="true">🏆</span>
+          <span className="badge-label">Top hirer</span>
+          <strong>{analytics.topCompanies[0]}</strong>
+        </div>
+      )}
+    </div>
               </div>
 
               {/* Pagination meta */}
