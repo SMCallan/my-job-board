@@ -740,3 +740,8 @@ body {
     gap: 0.4rem;
   }
 }
+.badge-warning {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border-color: #FEF3C7;
+}
