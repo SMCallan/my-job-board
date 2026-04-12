@@ -1,234 +1,165 @@
-// src/App.jsx
 import { useEffect, useState } from 'react'
 import './App.css'
 
-const API_URL = 'https://job-board-api.callansmithmacdonald.workers.dev'
-
-export default function App() {
-  const [jobs, setJobs]           = useState([])
+function App() {
+  const [jobs, setJobs] = useState([])
   const [analytics, setAnalytics] = useState(null)
-  const [loading, setLoading]     = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false) // New state for pagination
+  
   const [searchInput, setSearchInput] = useState('')
   const [currentQuery, setCurrentQuery] = useState('')
+  const [offset, setOffset] = useState(0) // Tracks how many jobs we've loaded
+  
+  const API_URL = "https://job-board-api.callansmithmacdonald.workers.dev"
 
   useEffect(() => {
-    setLoading(true)
-    const url = currentQuery
-      ? `${API_URL}?search=${encodeURIComponent(currentQuery)}`
-      : API_URL
+    if (offset === 0) setLoading(true)
+    else setLoadingMore(true)
 
-    fetch(url)
-      .then(r => r.json())
+    const fetchUrl = currentQuery 
+      ? `${API_URL}?search=${encodeURIComponent(currentQuery)}&offset=${offset}` 
+      : `${API_URL}?offset=${offset}`
+
+    fetch(fetchUrl)
+      .then(res => res.json())
       .then(data => {
-        setJobs(data.jobs || [])
+        if (offset === 0) {
+          setJobs(data.jobs || []) // Fresh search
+        } else {
+          setJobs(prev => [...prev, ...(data.jobs || [])]) // Append next 50 jobs
+        }
         setAnalytics(data.analytics || null)
         setLoading(false)
+        setLoadingMore(false)
       })
       .catch(err => {
-        console.error('Fetch failed:', err)
+        console.error("Failed to fetch jobs:", err)
         setLoading(false)
+        setLoadingMore(false)
       })
-  }, [currentQuery])
+  }, [currentQuery, offset])
 
-  const handleSearch = e => {
+  const handleSearch = (e) => {
     e.preventDefault()
-    setCurrentQuery(searchInput.trim())
+    setOffset(0) // Reset to first page on new search
+    setCurrentQuery(searchInput)
   }
 
   const clearSearch = () => {
     setSearchInput('')
     setCurrentQuery('')
+    setOffset(0)
   }
 
-  /* Format date cleanly */
-  const fmt = ts =>
-    new Date(ts).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'short', year: 'numeric',
-    })
-
   return (
-    <>
-      {/* ── HERO HEADER ─────────────────────────────────── */}
-      <header className="site-header">
-        <div className="header-inner">
+    <main className="dashboard-container">
+      <header className="dashboard-header">
+        <h1>🇬🇧 DevSecOps Job Radar</h1>
+        <p>Live aggregation of tech and security roles in London.</p>
 
-          {/* Left: Brand */}
-          <div className="brand-block">
-            <p className="brand-eyebrow">
-              <span className="eyebrow-dot" aria-hidden="true" />
-              Live · London, UK
-            </p>
-            <h1>
-              DevSecOps<span className="brand-accent"> Radar</span>
-            </h1>
-            <p className="brand-tagline">
-              Real-time aggregation of tech &amp; security engineering roles
-            </p>
-          </div>
-
-          {/* Right: Stat chips (only when data loaded) */}
-          {analytics && !loading && (
-            <div className="header-stats" aria-label="Board statistics">
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.totalActive}</span>
-                <span className="stat-label">Active Roles</span>
-              </div>
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.timeframe ?? '—'}</span>
-                <span className="stat-label">Timeframe</span>
-              </div>
-            </div>
-          )}
-
+        <div className="controls-container">
+          <form className="search-bar" onSubmit={handleSearch}>
+            <input 
+              type="text" 
+              placeholder="Search roles, companies (e.g., Python, AWS)..." 
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search jobs"
+            />
+            <button type="submit" className="btn-primary">Search</button>
+            {currentQuery && (
+              <button type="button" onClick={clearSearch} className="btn-secondary">Clear</button>
+            )}
+          </form>
         </div>
-      </header>
 
-      {/* ── APP SHELL: SIDEBAR + MAIN ────────────────────── */}
-      <div className="app-shell">
-
-        {/* ── SIDEBAR ──────────────────────────────────── */}
-        <aside className="sidebar" aria-label="Search and overview">
-
-          {/* Search panel */}
-          <div className="panel">
-            <p className="panel-label">Search Roles</p>
-            <form className="search-form" onSubmit={handleSearch}>
-              <input
-                type="search"
-                className="search-input"
-                placeholder="Python, AWS, Kubernetes…"
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-                aria-label="Search jobs by keyword"
-                autoComplete="off"
-              />
-              <button type="submit" className="btn-search">
-                Search
-              </button>
-              {currentQuery && (
-                <button
-                  type="button"
-                  className="btn-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search filter"
-                >
-                  Clear
-                </button>
-              )}
-            </form>
-          </div>
-
-          {/* Analytics overview panel */}
-          {analytics && !loading && (
-            <div className="panel" aria-label="Analytics overview">
-              <p className="panel-label">Overview</p>
-
-              <div className="meta-row">
-                <span>Active roles</span>
-                <strong>{analytics.totalActive}</strong>
-              </div>
-              <div className="panel-divider" />
-              <div className="meta-row">
-                <span>Timeframe</span>
-                <strong>{analytics.timeframe}</strong>
-              </div>
-
-              {currentQuery && (
-                <>
-                  <div className="panel-divider" />
-                  <div className="meta-row">
-                    <span>Matches</span>
-                    <strong>{jobs.length}</strong>
-                  </div>
-                </>
-              )}
+        {/* --- THE NEW ANALYTICS DASHBOARD --- */}
+        {analytics && !loading && (
+          <div className="analytics-dashboard">
+            <div className="analytic-badge">
+              <strong>{analytics.totalActive}</strong> Active Roles
             </div>
-          )}
+            
+            {analytics.averageSalary && analytics.averageSalary !== "N/A" && (
+              <div className="analytic-badge success-badge">
+                Avg Market Rate: <strong>{analytics.averageSalary}</strong>
+              </div>
+            )}
 
-        </aside>
-
-        {/* ── LISTINGS AREA ─────────────────────────────── */}
-        <main className="listings-area" aria-label="Job listings">
-
-          {/* Toolbar row */}
-          <div className="listings-toolbar">
-            <p className="listings-count">
-              {loading
-                ? 'Loading…'
-                : <><strong>{jobs.length}</strong> role{jobs.length !== 1 ? 's' : ''} found</>
-              }
-            </p>
-            {currentQuery && !loading && (
-              <span className="query-tag" role="status">
-                🔍 &ldquo;{currentQuery}&rdquo;
-              </span>
+            {analytics.topCompanies && analytics.topCompanies.length > 0 && (
+              <div className="analytic-badge alert-badge">
+                Top Hirer: <strong>{analytics.topCompanies[0]}</strong>
+              </div>
             )}
           </div>
+        )}
+      </header>
+      
+      {loading ? (
+        <div className="loader" aria-live="polite">Scanning networks for jobs...</div>
+      ) : jobs.length === 0 ? (
+        <div className="loader" aria-live="polite">No jobs found matching your criteria.</div>
+      ) : (
+        <>
+          <div className="results-count">
+            Showing {jobs.length} of {analytics?.totalActive || 0} roles
+          </div>
 
-          {/* States */}
-          {loading ? (
-            <div className="state-view" aria-live="polite">
-              <div className="dot-loader" aria-hidden="true">
-                <span className="dot" />
-                <span className="dot" />
-                <span className="dot" />
-              </div>
-              <p className="state-label">Scanning networks…</p>
-              <p className="state-sublabel">Pulling live roles from the pipeline</p>
-            </div>
+          <div className="jobs-grid">
+            {jobs.map(job => {
+              // Extract source from the ID prefix
+              const isAdzuna = job.id.startsWith('adzuna');
+              const sourceName = isAdzuna ? 'Adzuna' : 'Reed';
+              const sourceClass = isAdzuna ? 'tag-adzuna' : 'tag-reed';
 
-          ) : jobs.length === 0 ? (
-            <div className="state-view" aria-live="polite">
-              <p className="state-label">No roles matched your search.</p>
-              <p className="state-sublabel">Try a different keyword or clear the filter.</p>
-            </div>
-
-          ) : (
-            <div className="jobs-grid">
-              {jobs.map((job, i) => (
-                <article
-                  key={job.id}
-                  className="job-card"
-                  style={{ animationDelay: `${i * 0.045}s` }}
-                >
-                  <h2 className="job-title">{job.title}</h2>
-
-                  <div className="job-company" aria-label={`Company: ${job.company}`}>
-                    <span className="company-indicator" aria-hidden="true" />
-                    {job.company}
+              return (
+                <article key={job.id} className="job-card">
+                  <div className="job-header-row">
+                    <h2 className="job-title">{job.title}</h2>
+                    <span className={`source-tag ${sourceClass}`}>{sourceName}</span>
                   </div>
-
-                  {job.salary && (
-                    <span className="job-salary" aria-label={`Salary: ${job.salary}`}>
-                      {job.salary}
+                  
+                  <ul className="job-meta-list">
+                    <li>🏢 <strong>{job.company}</strong></li>
+                    <li>💰 {job.salary}</li>
+                  </ul>
+                  
+                  <div className="job-footer">
+                    <span className="job-date">
+                      Added: {new Date(job.timestamp).toLocaleDateString('en-GB')}
                     </span>
-                  )}
-
-                  <footer className="job-footer">
-                    <time
-                      className="job-date"
-                      dateTime={new Date(job.timestamp).toISOString()}
-                    >
-                      {fmt(job.timestamp)}
-                    </time>
-
-                    <a
-                      href={job.link}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="apply-btn"
+                    <a 
+                      href={job.link} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="apply-button"
                       aria-label={`Apply for ${job.title} at ${job.company}`}
                     >
-                      Apply Now →
+                      Apply Now
                     </a>
-                  </footer>
+                  </div>
                 </article>
-              ))}
+              )
+            })}
+          </div>
+
+          {/* --- LOAD MORE BUTTON --- */}
+          {analytics && jobs.length < analytics.totalActive && (
+            <div className="load-more-container">
+              <button 
+                className="btn-secondary load-more-btn"
+                onClick={() => setOffset(prev => prev + 50)}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Loading...' : 'Load Next 50 Roles ↓'}
+              </button>
             </div>
           )}
-
-        </main>
-      </div>
-    </>
+        </>
+      )}
+    </main>
   )
 }
+
+export default App
