@@ -4,7 +4,7 @@ function App() {
   const [jobs, setJobs] = useState([])
   
   // PASTE YOUR WORKER URL HERE
-  const API_URL = "https://job-board-api.YOUR_USERNAME.workers.dev"
+  const API_URL = "https://job-board-api.callansmithmacdonald.workers.dev"
 
   useEffect(() => {
     fetch(API_URL)
