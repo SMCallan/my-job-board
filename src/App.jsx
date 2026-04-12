@@ -1,43 +1,66 @@
 import { useEffect, useState } from 'react'
+import './App.css' // Imports our new styling
 
 function App() {
   const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
   
-  // PASTE YOUR WORKER URL HERE
+  // YOUR WORKER URL
   const API_URL = "https://job-board-api.callansmithmacdonald.workers.dev"
 
   useEffect(() => {
     fetch(API_URL)
       .then(res => res.json())
-      .then(data => setJobs(data))
-      .catch(err => console.error("Failed to fetch jobs:", err))
+      .then(data => {
+        setJobs(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error("Failed to fetch jobs:", err)
+        setLoading(false)
+      })
   }, [])
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui', padding: '20px' }}>
-      <h1>🇬🇧 My DevSecOps Job Board</h1>
+    <main className="dashboard-container">
+      <header className="dashboard-header">
+        <h1>🇬🇧 DevSecOps Job Radar</h1>
+        <p>Live aggregation of Python and Security roles in London.</p>
+      </header>
       
-      {jobs.length === 0 ? <p>Loading jobs...</p> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      {loading ? (
+        <div className="loader">Scanning networks for jobs...</div>
+      ) : jobs.length === 0 ? (
+        <div className="loader">No jobs found in the database.</div>
+      ) : (
+        <div className="jobs-grid">
           {jobs.map(job => (
-            <div key={job.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-              <h2 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{job.title}</h2>
-              <p style={{ margin: '5px 0' }}><strong>🏢 Company:</strong> {job.company}</p>
-              <p style={{ margin: '5px 0' }}><strong>💰 Salary:</strong> {job.salary}</p>
-              <p style={{ margin: '5px 0', fontSize: '0.8rem', color: '#666' }}>Added: {new Date(job.timestamp).toLocaleDateString()}</p>
+            <article key={job.id} className="job-card">
+              <h2 className="job-title">{job.title}</h2>
+              
+              <div className="job-details">
+                <p>🏢 <strong>{job.company}</strong></p>
+                <p>💰 {job.salary}</p>
+              </div>
+              
+              <div className="job-date">
+                Added: {new Date(job.timestamp).toLocaleDateString('en-GB')}
+              </div>
+              
               <a 
                 href={job.link} 
                 target="_blank" 
                 rel="noreferrer"
-                style={{ display: 'inline-block', marginTop: '10px', padding: '8px 16px', background: '#0070f3', color: 'white', textDecoration: 'none', borderRadius: '4px' }}
+                className="apply-button"
+                aria-label={`Apply for ${job.title} at ${job.company}`}
               >
                 Apply Now
               </a>
-            </div>
+            </article>
           ))}
         </div>
       )}
-    </div>
+    </main>
   )
 }
 
