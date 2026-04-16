@@ -78,7 +78,7 @@ export default function App() {
               Live · London, UK
             </p>
             <h1>
-              DevSecOps<span className="brand-accent"> Radar</span>
+              TechJ0B<span className="brand-accent"> Radar</span>
             </h1>
             <p className="brand-tagline">
               Real-time aggregation of tech &amp; security engineering roles
