@@ -1,4 +1,4 @@
-// src/App.jsx  —  DevSecOps Radar v2.1 (Final Build)
+// src/App.jsx  —  DevSecOps Radar v2.2
 import { useEffect, useState } from 'react'
 import './App.css'
 
@@ -41,6 +41,12 @@ export default function App() {
     e.preventDefault()
     setOffset(0)
     setCurrentQuery(searchInput.trim())
+  }
+
+  const handleQuickFilter = (tag) => {
+    setSearchInput(tag)
+    setOffset(0)
+    setCurrentQuery(tag)
   }
 
   const clearSearch = () => {
@@ -130,6 +136,30 @@ export default function App() {
                 </button>
               )}
             </form>
+            
+            {/* Quick Filters */}
+            <div className="quick-filters" style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {['DevSecOps', 'AppSec', 'Python', 'Azure', 'Remote'].map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="btn-filter-tag"
+                  onClick={() => handleQuickFilter(tag)}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    background: 'var(--bg-secondary, #f8fafc)',
+                    color: 'var(--text-primary, #0f172a)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Analytics overview panel */}
@@ -154,7 +184,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Avg Contract Day Rate — Uses the badge-warning class from your CSS */}
+                {/* Avg Contract Day Rate */}
                 {analytics.avgContract && analytics.avgContract !== 'N/A' && (
                   <div className="badge badge-warning" role="status">
                     <span aria-hidden="true">⏳</span>
