@@ -571,6 +571,8 @@ export default function App() {
               ))}
             </div>
 
+            <p className="source-note">Sources: Adzuna · Reed</p>
+
             <div className="filter-group">
               <label htmlFor="minFit" className="filter-label">Minimum fit score</label>
               <select id="minFit" className="filter-select" value={minFitScore} onChange={e => setMinFitScore(Number(e.target.value))}>
