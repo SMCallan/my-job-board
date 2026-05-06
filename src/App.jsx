@@ -35,6 +35,7 @@ const ROLE_TRACK_OPTIONS = [
 const SALARY_BAND_OPTIONS = ['Any', 'Core target', 'Stretch target', 'High-value stretch', 'Unknown']
 const STATUS_OPTIONS = ['Reviewing', 'Applied', 'Interview', 'Rejected', 'Archived']
 
+
 function HeroRadar() {
   const canvasRef = useRef(null)
 
@@ -44,6 +45,7 @@ function HeroRadar() {
     if (!canvas || !ctx) return undefined
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const pointer = { x: 0.5, y: 0.45, active: false }
     const particles = Array.from({ length: 54 }, (_, index) => ({
       orbit: 44 + (index % 9) * 15,
       angle: index * 0.72,
@@ -89,56 +91,13 @@ function HeroRadar() {
       ctx.restore()
     }
 
-    const drawFitSignal = (time, centerX, centerY) => {
-      const signalWidth = Math.min(width * 0.48, 210)
-      const signalHeight = 74
-      const left = centerX - signalWidth / 2
-      const top = centerY - signalHeight / 2
-      const scores = [0.82, 0.67, 0.91]
-
-      ctx.save()
-      ctx.shadowBlur = 24
-      ctx.shadowColor = 'rgba(56, 189, 248, 0.42)'
-      ctx.strokeStyle = 'rgba(219, 234, 254, 0.34)'
-      ctx.fillStyle = 'rgba(6, 15, 30, 0.36)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(left, top, signalWidth, signalHeight, 18)
-      ctx.fill()
-      ctx.stroke()
-
-      scores.forEach((score, index) => {
-        const rowY = top + 18 + index * 19
-        const glow = 0.64 + Math.sin(time / 850 + index) * 0.16
-        const barWidth = (signalWidth - 62) * score
-
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.22)'
-        ctx.beginPath()
-        ctx.roundRect(left + 42, rowY, signalWidth - 62, 6, 999)
-        ctx.fill()
-
-        const bar = ctx.createLinearGradient(left + 42, rowY, left + 42 + barWidth, rowY)
-        bar.addColorStop(0, `rgba(56, 189, 248, ${glow})`)
-        bar.addColorStop(1, `rgba(125, 190, 255, ${glow})`)
-        ctx.fillStyle = bar
-        ctx.beginPath()
-        ctx.roundRect(left + 42, rowY, barWidth, 6, 999)
-        ctx.fill()
-
-        ctx.fillStyle = `rgba(219, 234, 254, ${0.58 + glow * 0.28})`
-        ctx.beginPath()
-        ctx.arc(left + 24, rowY + 3, 3.5 + index * 0.35, 0, Math.PI * 2)
-        ctx.fill()
-      })
-
-      ctx.restore()
-    }
-
     const draw = time => {
       ctx.clearRect(0, 0, width, height)
 
-      const centerX = width * 0.53
-      const centerY = height * 0.48
+      const driftX = pointer.active ? (pointer.x - 0.5) * 34 : Math.sin(time / 2200) * 12
+      const driftY = pointer.active ? (pointer.y - 0.5) * 24 : Math.cos(time / 2600) * 8
+      const centerX = width * 0.53 + driftX
+      const centerY = height * 0.48 + driftY
       const pulse = 1 + Math.sin(time / 760) * 0.035
 
       const background = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, Math.max(width, height) * 0.72)
@@ -184,8 +143,6 @@ function HeroRadar() {
         }
       })
 
-      drawFitSignal(time, centerX, centerY)
-
       ctx.save()
       ctx.translate(centerX, centerY)
       ctx.rotate(time / 1900)
@@ -206,6 +163,17 @@ function HeroRadar() {
       }
     }
 
+    const handlePointerMove = event => {
+      const rect = canvas.getBoundingClientRect()
+      pointer.x = (event.clientX - rect.left) / rect.width
+      pointer.y = (event.clientY - rect.top) / rect.height
+      pointer.active = true
+    }
+
+    const handlePointerLeave = () => {
+      pointer.active = false
+    }
+
     resize()
     draw(0)
 
@@ -214,16 +182,28 @@ function HeroRadar() {
     }
 
     window.addEventListener('resize', resize)
+    canvas.addEventListener('pointermove', handlePointerMove)
+    canvas.addEventListener('pointerleave', handlePointerLeave)
 
     return () => {
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', resize)
+      canvas.removeEventListener('pointermove', handlePointerMove)
+      canvas.removeEventListener('pointerleave', handlePointerLeave)
     }
   }, [])
 
   return (
     <div className="hero-visual" aria-hidden="true">
       <canvas ref={canvasRef} className="hero-canvas" />
+      <div className="hero-visual-card hero-visual-card-primary">
+        <span>Fit signal</span>
+        <strong>Live ranking</strong>
+      </div>
+      <div className="hero-visual-card hero-visual-card-secondary">
+        <span>Sources</span>
+        <strong>Adzuna · Reed</strong>
+      </div>
     </div>
   )
 }
