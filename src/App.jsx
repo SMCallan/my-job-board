@@ -15,7 +15,6 @@ const QUICK_FILTERS = [
   { label: 'CI/CD', type: 'search', value: 'ci/cd' },
   { label: 'Cloud Security', type: 'search', value: 'cloud security' },
   { label: 'AI Security', type: 'search', value: 'ai security' },
-  { label: 'Low On-Call', type: 'culture', value: 'Low culture risk' },
   { label: '£60k+', type: 'salary', value: 60000 },
 ]
 
@@ -34,7 +33,6 @@ const ROLE_TRACK_OPTIONS = [
 ]
 
 const SALARY_BAND_OPTIONS = ['Any', 'Core target', 'Stretch target', 'High-value stretch', 'Unknown']
-const CULTURE_OPTIONS = ['Any', 'Low culture risk', 'Check on-call', 'Possible chaos', 'High pressure', 'Unknown']
 const STATUS_OPTIONS = ['Reviewing', 'Applied', 'Interview', 'Rejected', 'Archived']
 
 function parseJsonList(value) {
@@ -67,7 +65,7 @@ function getScoreBand(score) {
 }
 
 function getScoreLabel(score) {
-  if (score >= 75) return 'Apply now'
+  if (score >= 75) return 'Strong fit'
   if (score >= 60) return 'Worth reviewing'
   if (score >= 45) return 'Check carefully'
   return 'Low fit'
@@ -103,8 +101,6 @@ function filterJobs(jobs, filters) {
     const score = job.fit_score ?? 0
     const roleTrack = job.role_track || inferRoleTrack(job.title)
     const salaryBand = job.salary_band || 'Unknown'
-    const cultureRisk = job.culture_risk || 'Unknown'
-
     if (filters.minFitScore && score < filters.minFitScore) return false
     if (filters.roleTrackFilter !== 'Any' && roleTrack !== filters.roleTrackFilter) return false
     if (
@@ -113,7 +109,6 @@ function filterJobs(jobs, filters) {
     ) {
       return false
     }
-    if (filters.cultureFilter !== 'Any' && cultureRisk !== filters.cultureFilter) return false
     if (filters.showSavedOnly && !filters.savedJobIds.includes(job.id)) return false
     if (filters.minSalary > 0 && (job.salary_max ?? 0) < filters.minSalary) return false
     return true
@@ -150,7 +145,6 @@ export default function App() {
   const [minFitScore, setMinFitScore] = useState(0)
   const [roleTrackFilter, setRoleTrackFilter] = useState('Any')
   const [salaryBandFilter, setSalaryBandFilter] = useState('Any')
-  const [cultureFilter, setCultureFilter] = useState('Any')
   const [showSavedOnly, setShowSavedOnly] = useState(false)
   const [sortMode, setSortMode] = useState('fit_desc')
   const [minSalaryFilter, setMinSalaryFilter] = useState(0)
@@ -210,10 +204,6 @@ export default function App() {
       setCurrentQuery(filter.value)
       return
     }
-    if (filter.type === 'culture') {
-      setCultureFilter(filter.value)
-      return
-    }
     if (filter.type === 'salary') {
       setMinSalaryFilter(filter.value)
     }
@@ -226,7 +216,6 @@ export default function App() {
     setMinFitScore(0)
     setRoleTrackFilter('Any')
     setSalaryBandFilter('Any')
-    setCultureFilter('Any')
     setShowSavedOnly(false)
     setSortMode('fit_desc')
     setMinSalaryFilter(0)
@@ -256,32 +245,26 @@ export default function App() {
         minFitScore,
         roleTrackFilter,
         salaryBandFilter,
-        cultureFilter,
         showSavedOnly,
         savedJobIds,
         minSalary: minSalaryFilter,
       }),
-    [jobs, minFitScore, roleTrackFilter, salaryBandFilter, cultureFilter, showSavedOnly, savedJobIds, minSalaryFilter],
+    [jobs, minFitScore, roleTrackFilter, salaryBandFilter, showSavedOnly, savedJobIds, minSalaryFilter],
   )
 
   const displayJobs = useMemo(() => sortJobs(filteredJobs, sortMode), [filteredJobs, sortMode])
 
   const loadedAnalytics = useMemo(() => {
     const scored = jobs.filter(j => typeof j.fit_score === 'number')
-    const applyNow = scored.filter(j => j.fit_score >= 75)
     const avgFit = scored.length
       ? Math.round(scored.reduce((sum, j) => sum + j.fit_score, 0) / scored.length)
       : null
     const bestFit = scored.length ? Math.max(...scored.map(j => j.fit_score)) : null
     const coreSalary = jobs.filter(j => String(j.salary_band || '').toLowerCase().includes('core target'))
-    const highRisk = jobs.filter(j => String(j.culture_risk || '').toLowerCase().includes('high'))
-
     return {
       bestFit,
       avgFit,
-      applyNowCount: applyNow.length,
       coreSalaryCount: coreSalary.length,
-      highRiskCount: highRisk.length,
     }
   }, [jobs])
 
@@ -298,7 +281,6 @@ export default function App() {
       'Company',
       'Salary',
       'Salary Band',
-      'Culture Risk',
       'Source',
       'Date',
       'Link',
@@ -311,7 +293,6 @@ export default function App() {
       job.company ?? '',
       job.salary ?? '',
       job.salary_band ?? '',
-      job.culture_risk ?? '',
       getSource(job).label,
       job.timestamp ?? '',
       job.link ?? '',
@@ -437,13 +418,6 @@ export default function App() {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="culture" className="filter-label">Culture</label>
-              <select id="culture" className="filter-select" value={cultureFilter} onChange={e => setCultureFilter(e.target.value)}>
-                {CULTURE_OPTIONS.map(option => <option key={option}>{option}</option>)}
-              </select>
-            </div>
-
             <div className="filter-inline">
               <label>
                 <input type="checkbox" checked={showSavedOnly} onChange={e => setShowSavedOnly(e.target.checked)} /> Show saved only
@@ -463,9 +437,7 @@ export default function App() {
 
                 <div className="badge badge-default"><span className="badge-label">Best fit</span><strong>{loadedAnalytics.bestFit ?? 'N/A'}</strong></div>
                 <div className="badge badge-default"><span className="badge-label">Avg fit</span><strong>{loadedAnalytics.avgFit ?? 'N/A'}</strong></div>
-                <div className="badge badge-success"><span className="badge-label">Apply-now roles</span><strong>{loadedAnalytics.applyNowCount}</strong></div>
                 <div className="badge badge-success"><span className="badge-label">Core target salary</span><strong>{loadedAnalytics.coreSalaryCount}</strong></div>
-                <div className="badge badge-alert"><span className="badge-label">High culture-risk</span><strong>{loadedAnalytics.highRiskCount}</strong></div>
                 <div className="badge badge-default"><span className="badge-label">Saved roles</span><strong>{savedJobIds.length}</strong></div>
               </div>
 
@@ -526,7 +498,7 @@ export default function App() {
           ) : displayJobs.length === 0 ? (
             <div className="state-view" aria-live="polite">
               <p className="state-label">No matching roles found.</p>
-              <p className="state-sublabel">Try lowering the fit score, clearing culture filters, or searching a broader term such as Python, Platform, AppSec or Security.</p>
+              <p className="state-sublabel">Try lowering the fit score or searching a broader term such as Python, Platform, AppSec or Security.</p>
             </div>
           ) : (
             <>
@@ -539,7 +511,6 @@ export default function App() {
                   const scoreReasons = parseJsonList(job.score_reasons_json)
                   const roleTrack = job.role_track || inferRoleTrack(job.title)
                   const salaryBand = job.salary_band || 'Unknown'
-                  const cultureRisk = job.culture_risk || 'Unknown'
                   const score = typeof job.fit_score === 'number' ? job.fit_score : null
                   const contractLabel = job.salary_type === 'daily' ? 'Contract day rate' : null
 
@@ -564,15 +535,6 @@ export default function App() {
                       <div className="pill-row">
                         <span className="role-track-pill">{roleTrack}</span>
                         <span className="salary-band-pill">{salaryBand}</span>
-                        <span className={`culture-risk-pill ${
-                          cultureRisk.toLowerCase().includes('low')
-                            ? 'culture-low'
-                            : cultureRisk.toLowerCase().includes('check') || cultureRisk.toLowerCase().includes('possible')
-                              ? 'culture-medium'
-                              : cultureRisk.toLowerCase().includes('high')
-                                ? 'culture-high'
-                                : 'culture-unknown'
-                        }`}>Culture: {cultureRisk}</span>
                       </div>
 
                       <div className="salary-block">

@@ -19,7 +19,6 @@ The frontend is designed as a lightweight market intelligence interface for anal
 - Which roles are currently live?
 - Which roles best match a secure full-stack / AppSec / platform engineering profile?
 - Which jobs have strong salary alignment?
-- Which roles may carry higher culture or on-call risk?
 - Which companies are hiring most actively?
 - Which roles should be saved, reviewed, applied to, or archived?
 
@@ -34,8 +33,8 @@ The dashboard consumes live role data from a Cloudflare Worker API and presents 
 Core interface sections:
 
 - **Header overview** showing active roles and reporting timeframe
-- **Search and quick filters** for role types, technologies, salary, and culture indicators
-- **Market overview cards** for active roles, salary analytics, fit scores, saved roles, and risk signals
+- **Search and quick filters** for role types, technologies, and salary
+- **Market overview cards** for active roles, salary analytics, fit scores, and saved roles
 - **Top matches section** highlighting the strongest current opportunities
 - **Job cards** with fit score, company, salary, source, tags, scoring reasons, saved status, and apply link
 - **Progressive loading** with “Load next 50 roles” pagination
@@ -141,7 +140,6 @@ The sidebar includes one-click filters for common target areas:
 * CI/CD
 * Cloud Security
 * AI Security
-* Low On-Call
 * £60k+
 
 These filters are designed for fast, practical job-market triage rather than generic browsing.
@@ -156,7 +154,7 @@ Score bands are presented with clear labels:
 
 | Score Range | Label           |
 | ----------- | --------------- |
-| 75+         | Apply now       |
+| 75+         | Strong fit      |
 | 60–74       | Worth reviewing |
 | 45–59       | Check carefully |
 | Below 45    | Low fit         |
@@ -201,18 +199,6 @@ This helps separate high-value opportunities from noisy job-board data.
 
 ---
 
-### 🧠 Culture and Risk Signals
-
-The dashboard includes culture-risk filtering and display labels such as:
-
-* Low culture risk
-* Check on-call
-* Possible chaos
-* High pressure
-* Unknown
-
-This reflects a more realistic job search workflow where compensation alone is not enough. Roles can be reviewed based on likely operational pressure, on-call expectations, ambiguity, or delivery risk.
-
 ---
 
 ### ⭐ Saved Roles and Application Status
@@ -243,7 +229,6 @@ The export includes:
 * Company
 * Salary
 * Salary band
-* Culture risk
 * Source
 * Date
 * Application link
@@ -262,9 +247,7 @@ The sidebar includes high-level market indicators such as:
 * Top hiring company
 * Best fit score
 * Average fit score
-* Number of apply-now roles
 * Number of saved roles
-* Number of high culture-risk roles
 
 These cards turn the dashboard into a compact market snapshot rather than just a list of jobs.
 
@@ -474,7 +457,6 @@ The dashboard expects job objects with fields such as:
   salary_max: number,
   salary_type: string,
   salary_band: string,
-  culture_risk: string,
   role_track: string,
   fit_score: number,
   score_reasons_json: string,

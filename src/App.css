@@ -142,14 +142,9 @@ body {
 .score-low { background: #f8fafc; color: #334155; }
 
 .pill-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.role-track-pill, .salary-band-pill, .culture-risk-pill { border-radius: 999px; padding: 0.23rem 0.55rem; font-size: 0.78rem; border: 1px solid var(--border); }
+.role-track-pill, .salary-band-pill { border-radius: 999px; padding: 0.23rem 0.55rem; font-size: 0.78rem; border: 1px solid var(--border); }
 .role-track-pill { background: #eef2ff; color: #3730a3; }
 .salary-band-pill { background: #f5f3ff; color: #6d28d9; }
-.culture-risk-pill { background: #f8fafc; color: #334155; }
-.culture-low { background: #ecfdf5; color: #065f46; }
-.culture-medium { background: #fffbeb; color: #92400e; }
-.culture-high { background: #fff1f2; color: #9f1239; }
-.culture-unknown { background: #f8fafc; color: #334155; }
 
 .salary-block { font-size: 0.88rem; color: var(--text-secondary); }
 .salary-block p { margin: 0.15rem 0; }
