@@ -35,7 +35,6 @@ const ROLE_TRACK_OPTIONS = [
 const SALARY_BAND_OPTIONS = ['Any', 'Core target', 'Stretch target', 'High-value stretch', 'Unknown']
 const STATUS_OPTIONS = ['Reviewing', 'Applied', 'Interview', 'Rejected', 'Archived']
 
-
 function HeroRadar() {
   const canvasRef = useRef(null)
 
@@ -45,7 +44,6 @@ function HeroRadar() {
     if (!canvas || !ctx) return undefined
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const pointer = { x: 0.5, y: 0.45, active: false }
     const particles = Array.from({ length: 54 }, (_, index) => ({
       orbit: 44 + (index % 9) * 15,
       angle: index * 0.72,
@@ -91,13 +89,68 @@ function HeroRadar() {
       ctx.restore()
     }
 
+    const drawMarketMap = (time, centerX, centerY) => {
+      const nodeCount = 18
+      const nodes = Array.from({ length: nodeCount }, (_, index) => {
+        const ring = index % 3
+        const radius = 44 + ring * 42
+        const angle = (Math.PI * 2 * index) / nodeCount + ring * 0.44 + time / (9000 + ring * 2400)
+        return {
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle * 1.18) * radius * 0.62,
+          radius: 2.4 + ring * 0.55,
+          alpha: 0.48 + Math.sin(time / 700 + index) * 0.18,
+          ring,
+        }
+      })
+
+      ctx.save()
+      ctx.lineWidth = 1
+      nodes.forEach((node, index) => {
+        const next = nodes[(index + 5) % nodes.length]
+        const near = nodes[(index + 11) % nodes.length]
+        const lineAlpha = 0.08 + node.alpha * 0.12
+
+        ctx.strokeStyle = `rgba(125, 190, 255, ${lineAlpha})`
+        ctx.beginPath()
+        ctx.moveTo(node.x, node.y)
+        ctx.lineTo(next.x, next.y)
+        ctx.stroke()
+
+        if (index % 3 === 0) {
+          ctx.strokeStyle = `rgba(219, 234, 254, ${lineAlpha * 0.72})`
+          ctx.beginPath()
+          ctx.moveTo(node.x, node.y)
+          ctx.quadraticCurveTo(centerX, centerY, near.x, near.y)
+          ctx.stroke()
+        }
+      })
+
+      const coreGradient = ctx.createRadialGradient(centerX, centerY, 4, centerX, centerY, 58)
+      coreGradient.addColorStop(0, 'rgba(219, 234, 254, 0.72)')
+      coreGradient.addColorStop(0.28, 'rgba(56, 189, 248, 0.28)')
+      coreGradient.addColorStop(1, 'rgba(56, 189, 248, 0)')
+      ctx.fillStyle = coreGradient
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 58 + Math.sin(time / 900) * 2, 0, Math.PI * 2)
+      ctx.fill()
+
+      nodes.forEach(node => {
+        ctx.shadowBlur = 14
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.8)'
+        ctx.fillStyle = `rgba(219, 234, 254, ${node.alpha})`
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+      ctx.restore()
+    }
+
     const draw = time => {
       ctx.clearRect(0, 0, width, height)
 
-      const driftX = pointer.active ? (pointer.x - 0.5) * 34 : Math.sin(time / 2200) * 12
-      const driftY = pointer.active ? (pointer.y - 0.5) * 24 : Math.cos(time / 2600) * 8
-      const centerX = width * 0.53 + driftX
-      const centerY = height * 0.48 + driftY
+      const centerX = width * 0.53
+      const centerY = height * 0.48
       const pulse = 1 + Math.sin(time / 760) * 0.035
 
       const background = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, Math.max(width, height) * 0.72)
@@ -143,6 +196,8 @@ function HeroRadar() {
         }
       })
 
+      drawMarketMap(time, centerX, centerY)
+
       ctx.save()
       ctx.translate(centerX, centerY)
       ctx.rotate(time / 1900)
@@ -163,17 +218,6 @@ function HeroRadar() {
       }
     }
 
-    const handlePointerMove = event => {
-      const rect = canvas.getBoundingClientRect()
-      pointer.x = (event.clientX - rect.left) / rect.width
-      pointer.y = (event.clientY - rect.top) / rect.height
-      pointer.active = true
-    }
-
-    const handlePointerLeave = () => {
-      pointer.active = false
-    }
-
     resize()
     draw(0)
 
@@ -182,28 +226,16 @@ function HeroRadar() {
     }
 
     window.addEventListener('resize', resize)
-    canvas.addEventListener('pointermove', handlePointerMove)
-    canvas.addEventListener('pointerleave', handlePointerLeave)
 
     return () => {
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', resize)
-      canvas.removeEventListener('pointermove', handlePointerMove)
-      canvas.removeEventListener('pointerleave', handlePointerLeave)
     }
   }, [])
 
   return (
     <div className="hero-visual" aria-hidden="true">
       <canvas ref={canvasRef} className="hero-canvas" />
-      <div className="hero-visual-card hero-visual-card-primary">
-        <span>Fit signal</span>
-        <strong>Live ranking</strong>
-      </div>
-      <div className="hero-visual-card hero-visual-card-secondary">
-        <span>Sources</span>
-        <strong>Adzuna · Reed</strong>
-      </div>
     </div>
   )
 }
@@ -571,7 +603,7 @@ export default function App() {
               ))}
             </div>
 
-            <p className="source-note">Sources: Adzuna · Reed</p>
+            <p className="source-note">Job data from Adzuna and Reed.</p>
 
             <div className="filter-group">
               <label htmlFor="minFit" className="filter-label">Minimum fit score</label>
