@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const API_URL = 'https://job-board-api.callansmithmacdonald.workers.dev'
@@ -34,6 +34,179 @@ const ROLE_TRACK_OPTIONS = [
 
 const SALARY_BAND_OPTIONS = ['Any', 'Core target', 'Stretch target', 'High-value stretch', 'Unknown']
 const STATUS_OPTIONS = ['Reviewing', 'Applied', 'Interview', 'Rejected', 'Archived']
+
+
+function HeroRadar() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return undefined
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const pointer = { x: 0.5, y: 0.45, active: false }
+    const particles = Array.from({ length: 54 }, (_, index) => ({
+      orbit: 44 + (index % 9) * 15,
+      angle: index * 0.72,
+      speed: 0.0015 + (index % 7) * 0.00028,
+      size: 1.1 + (index % 4) * 0.4,
+      layer: index % 3,
+    }))
+
+    let animationFrameId = 0
+    let width = 0
+    let height = 0
+    let pixelRatio = 1
+
+    const resize = () => {
+      const bounds = canvas.getBoundingClientRect()
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+      width = Math.max(bounds.width, 1)
+      height = Math.max(bounds.height, 1)
+      canvas.width = Math.floor(width * pixelRatio)
+      canvas.height = Math.floor(height * pixelRatio)
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+    }
+
+    const drawGrid = (time, centerX, centerY) => {
+      ctx.save()
+      ctx.strokeStyle = 'rgba(168, 196, 255, 0.13)'
+      ctx.lineWidth = 1
+
+      for (let radius = 46; radius < Math.max(width, height); radius += 52) {
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius + Math.sin(time / 900 + radius) * 2, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+
+      for (let i = 0; i < 16; i += 1) {
+        const angle = (Math.PI * 2 * i) / 16 + time / 12000
+        ctx.beginPath()
+        ctx.moveTo(centerX, centerY)
+        ctx.lineTo(centerX + Math.cos(angle) * width, centerY + Math.sin(angle) * width)
+        ctx.stroke()
+      }
+
+      ctx.restore()
+    }
+
+    const draw = time => {
+      ctx.clearRect(0, 0, width, height)
+
+      const driftX = pointer.active ? (pointer.x - 0.5) * 34 : Math.sin(time / 2200) * 12
+      const driftY = pointer.active ? (pointer.y - 0.5) * 24 : Math.cos(time / 2600) * 8
+      const centerX = width * 0.53 + driftX
+      const centerY = height * 0.48 + driftY
+      const pulse = 1 + Math.sin(time / 760) * 0.035
+
+      const background = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, Math.max(width, height) * 0.72)
+      background.addColorStop(0, 'rgba(72, 151, 255, 0.36)')
+      background.addColorStop(0.38, 'rgba(30, 111, 255, 0.12)')
+      background.addColorStop(1, 'rgba(6, 15, 30, 0)')
+      ctx.fillStyle = background
+      ctx.fillRect(0, 0, width, height)
+
+      drawGrid(time, centerX, centerY)
+
+      ctx.save()
+      ctx.strokeStyle = 'rgba(125, 190, 255, 0.68)'
+      ctx.lineWidth = 2
+      ctx.shadowBlur = 18
+      ctx.shadowColor = 'rgba(30, 111, 255, 0.8)'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 86 * pulse, -0.3 + time / 1600, Math.PI * 1.2 + time / 1600)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 132 / pulse, Math.PI * 0.95 - time / 2100, Math.PI * 1.9 - time / 2100)
+      ctx.stroke()
+      ctx.restore()
+
+      particles.forEach((particle, index) => {
+        const angle = particle.angle + (reduceMotion ? 0 : time * particle.speed)
+        const wobble = Math.sin(time / 820 + index) * (particle.layer + 1) * 2.5
+        const x = centerX + Math.cos(angle) * (particle.orbit + wobble)
+        const y = centerY + Math.sin(angle * 1.12) * (particle.orbit * 0.58 + wobble)
+        const alpha = 0.45 + Math.sin(time / 550 + index) * 0.24
+
+        ctx.fillStyle = `rgba(219, 234, 254, ${alpha})`
+        ctx.beginPath()
+        ctx.arc(x, y, particle.size, 0, Math.PI * 2)
+        ctx.fill()
+
+        if (index % 5 === 0) {
+          ctx.strokeStyle = `rgba(96, 165, 250, ${alpha * 0.34})`
+          ctx.beginPath()
+          ctx.moveTo(centerX, centerY)
+          ctx.lineTo(x, y)
+          ctx.stroke()
+        }
+      })
+
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      ctx.rotate(time / 1900)
+      const sweep = ctx.createLinearGradient(0, 0, 170, 0)
+      sweep.addColorStop(0, 'rgba(56, 189, 248, 0.42)')
+      sweep.addColorStop(0.62, 'rgba(56, 189, 248, 0.08)')
+      sweep.addColorStop(1, 'rgba(56, 189, 248, 0)')
+      ctx.fillStyle = sweep
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.arc(0, 0, 180, -0.08, 0.42)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+
+      if (!reduceMotion) {
+        animationFrameId = requestAnimationFrame(draw)
+      }
+    }
+
+    const handlePointerMove = event => {
+      const rect = canvas.getBoundingClientRect()
+      pointer.x = (event.clientX - rect.left) / rect.width
+      pointer.y = (event.clientY - rect.top) / rect.height
+      pointer.active = true
+    }
+
+    const handlePointerLeave = () => {
+      pointer.active = false
+    }
+
+    resize()
+    draw(0)
+
+    if (!reduceMotion) {
+      animationFrameId = requestAnimationFrame(draw)
+    }
+
+    window.addEventListener('resize', resize)
+    canvas.addEventListener('pointermove', handlePointerMove)
+    canvas.addEventListener('pointerleave', handlePointerLeave)
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', resize)
+      canvas.removeEventListener('pointermove', handlePointerMove)
+      canvas.removeEventListener('pointerleave', handlePointerLeave)
+    }
+  }, [])
+
+  return (
+    <div className="hero-visual" aria-hidden="true">
+      <canvas ref={canvasRef} className="hero-canvas" />
+      <div className="hero-visual-card hero-visual-card-primary">
+        <span>Fit signal</span>
+        <strong>Live ranking</strong>
+      </div>
+      <div className="hero-visual-card hero-visual-card-secondary">
+        <span>Sources</span>
+        <strong>Adzuna · Reed</strong>
+      </div>
+    </div>
+  )
+}
 
 function parseJsonList(value) {
   if (!value) return []
@@ -332,18 +505,22 @@ export default function App() {
             </p>
           </div>
 
-          {analytics && !loading && (
-            <div className="header-stats" aria-label="Board statistics">
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.totalActive}</span>
-                <span className="stat-label">Active Roles</span>
+          <div className="hero-side">
+            <HeroRadar />
+
+            {analytics && !loading && (
+              <div className="header-stats" aria-label="Board statistics">
+                <div className="stat-chip">
+                  <span className="stat-number">{analytics.totalActive}</span>
+                  <span className="stat-label">Active Roles</span>
+                </div>
+                <div className="stat-chip">
+                  <span className="stat-number">{analytics.timeframe ?? 'Last 14 Days'}</span>
+                  <span className="stat-label">Timeframe</span>
+                </div>
               </div>
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.timeframe ?? 'Last 14 Days'}</span>
-                <span className="stat-label">Timeframe</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
