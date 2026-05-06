@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const API_URL = 'https://job-board-api.callansmithmacdonald.workers.dev'
@@ -15,7 +15,6 @@ const QUICK_FILTERS = [
   { label: 'CI/CD', type: 'search', value: 'ci/cd' },
   { label: 'Cloud Security', type: 'search', value: 'cloud security' },
   { label: 'AI Security', type: 'search', value: 'ai security' },
-  { label: 'Low On-Call', type: 'culture', value: 'Low culture risk' },
   { label: '£60k+', type: 'salary', value: 60000 },
 ]
 
@@ -34,8 +33,212 @@ const ROLE_TRACK_OPTIONS = [
 ]
 
 const SALARY_BAND_OPTIONS = ['Any', 'Core target', 'Stretch target', 'High-value stretch', 'Unknown']
-const CULTURE_OPTIONS = ['Any', 'Low culture risk', 'Check on-call', 'Possible chaos', 'High pressure', 'Unknown']
 const STATUS_OPTIONS = ['Reviewing', 'Applied', 'Interview', 'Rejected', 'Archived']
+
+function HeroRadar() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return undefined
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const particles = Array.from({ length: 54 }, (_, index) => ({
+      orbit: 44 + (index % 9) * 15,
+      angle: index * 0.72,
+      speed: 0.0015 + (index % 7) * 0.00028,
+      size: 1.1 + (index % 4) * 0.4,
+      layer: index % 3,
+    }))
+
+    let animationFrameId = 0
+    let width = 0
+    let height = 0
+    let pixelRatio = 1
+
+    const resize = () => {
+      const bounds = canvas.getBoundingClientRect()
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+      width = Math.max(bounds.width, 1)
+      height = Math.max(bounds.height, 1)
+      canvas.width = Math.floor(width * pixelRatio)
+      canvas.height = Math.floor(height * pixelRatio)
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+    }
+
+    const drawGrid = (time, centerX, centerY) => {
+      ctx.save()
+      ctx.strokeStyle = 'rgba(168, 196, 255, 0.13)'
+      ctx.lineWidth = 1
+
+      for (let radius = 46; radius < Math.max(width, height); radius += 52) {
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius + Math.sin(time / 900 + radius) * 2, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+
+      for (let i = 0; i < 16; i += 1) {
+        const angle = (Math.PI * 2 * i) / 16 + time / 12000
+        ctx.beginPath()
+        ctx.moveTo(centerX, centerY)
+        ctx.lineTo(centerX + Math.cos(angle) * width, centerY + Math.sin(angle) * width)
+        ctx.stroke()
+      }
+
+      ctx.restore()
+    }
+
+    const drawMarketMap = (time, centerX, centerY) => {
+      const nodeCount = 18
+      const nodes = Array.from({ length: nodeCount }, (_, index) => {
+        const ring = index % 3
+        const radius = 44 + ring * 42
+        const angle = (Math.PI * 2 * index) / nodeCount + ring * 0.44 + time / (9000 + ring * 2400)
+        return {
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle * 1.18) * radius * 0.62,
+          radius: 2.4 + ring * 0.55,
+          alpha: 0.48 + Math.sin(time / 700 + index) * 0.18,
+          ring,
+        }
+      })
+
+      ctx.save()
+      ctx.lineWidth = 1
+      nodes.forEach((node, index) => {
+        const next = nodes[(index + 5) % nodes.length]
+        const near = nodes[(index + 11) % nodes.length]
+        const lineAlpha = 0.08 + node.alpha * 0.12
+
+        ctx.strokeStyle = `rgba(125, 190, 255, ${lineAlpha})`
+        ctx.beginPath()
+        ctx.moveTo(node.x, node.y)
+        ctx.lineTo(next.x, next.y)
+        ctx.stroke()
+
+        if (index % 3 === 0) {
+          ctx.strokeStyle = `rgba(219, 234, 254, ${lineAlpha * 0.72})`
+          ctx.beginPath()
+          ctx.moveTo(node.x, node.y)
+          ctx.quadraticCurveTo(centerX, centerY, near.x, near.y)
+          ctx.stroke()
+        }
+      })
+
+      const coreGradient = ctx.createRadialGradient(centerX, centerY, 4, centerX, centerY, 58)
+      coreGradient.addColorStop(0, 'rgba(219, 234, 254, 0.72)')
+      coreGradient.addColorStop(0.28, 'rgba(56, 189, 248, 0.28)')
+      coreGradient.addColorStop(1, 'rgba(56, 189, 248, 0)')
+      ctx.fillStyle = coreGradient
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 58 + Math.sin(time / 900) * 2, 0, Math.PI * 2)
+      ctx.fill()
+
+      nodes.forEach(node => {
+        ctx.shadowBlur = 14
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.8)'
+        ctx.fillStyle = `rgba(219, 234, 254, ${node.alpha})`
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+      ctx.restore()
+    }
+
+    const draw = time => {
+      ctx.clearRect(0, 0, width, height)
+
+      const centerX = width * 0.53
+      const centerY = height * 0.48
+      const pulse = 1 + Math.sin(time / 760) * 0.035
+
+      const background = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, Math.max(width, height) * 0.72)
+      background.addColorStop(0, 'rgba(72, 151, 255, 0.36)')
+      background.addColorStop(0.38, 'rgba(30, 111, 255, 0.12)')
+      background.addColorStop(1, 'rgba(6, 15, 30, 0)')
+      ctx.fillStyle = background
+      ctx.fillRect(0, 0, width, height)
+
+      drawGrid(time, centerX, centerY)
+
+      ctx.save()
+      ctx.strokeStyle = 'rgba(125, 190, 255, 0.68)'
+      ctx.lineWidth = 2
+      ctx.shadowBlur = 18
+      ctx.shadowColor = 'rgba(30, 111, 255, 0.8)'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 86 * pulse, -0.3 + time / 1600, Math.PI * 1.2 + time / 1600)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 132 / pulse, Math.PI * 0.95 - time / 2100, Math.PI * 1.9 - time / 2100)
+      ctx.stroke()
+      ctx.restore()
+
+      particles.forEach((particle, index) => {
+        const angle = particle.angle + (reduceMotion ? 0 : time * particle.speed)
+        const wobble = Math.sin(time / 820 + index) * (particle.layer + 1) * 2.5
+        const x = centerX + Math.cos(angle) * (particle.orbit + wobble)
+        const y = centerY + Math.sin(angle * 1.12) * (particle.orbit * 0.58 + wobble)
+        const alpha = 0.45 + Math.sin(time / 550 + index) * 0.24
+
+        ctx.fillStyle = `rgba(219, 234, 254, ${alpha})`
+        ctx.beginPath()
+        ctx.arc(x, y, particle.size, 0, Math.PI * 2)
+        ctx.fill()
+
+        if (index % 5 === 0) {
+          ctx.strokeStyle = `rgba(96, 165, 250, ${alpha * 0.34})`
+          ctx.beginPath()
+          ctx.moveTo(centerX, centerY)
+          ctx.lineTo(x, y)
+          ctx.stroke()
+        }
+      })
+
+      drawMarketMap(time, centerX, centerY)
+
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      ctx.rotate(time / 1900)
+      const sweep = ctx.createLinearGradient(0, 0, 170, 0)
+      sweep.addColorStop(0, 'rgba(56, 189, 248, 0.42)')
+      sweep.addColorStop(0.62, 'rgba(56, 189, 248, 0.08)')
+      sweep.addColorStop(1, 'rgba(56, 189, 248, 0)')
+      ctx.fillStyle = sweep
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.arc(0, 0, 180, -0.08, 0.42)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+
+      if (!reduceMotion) {
+        animationFrameId = requestAnimationFrame(draw)
+      }
+    }
+
+    resize()
+    draw(0)
+
+    if (!reduceMotion) {
+      animationFrameId = requestAnimationFrame(draw)
+    }
+
+    window.addEventListener('resize', resize)
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  return (
+    <div className="hero-visual" aria-hidden="true">
+      <canvas ref={canvasRef} className="hero-canvas" />
+    </div>
+  )
+}
 
 function parseJsonList(value) {
   if (!value) return []
@@ -67,7 +270,7 @@ function getScoreBand(score) {
 }
 
 function getScoreLabel(score) {
-  if (score >= 75) return 'Apply now'
+  if (score >= 75) return 'Strong fit'
   if (score >= 60) return 'Worth reviewing'
   if (score >= 45) return 'Check carefully'
   return 'Low fit'
@@ -103,8 +306,6 @@ function filterJobs(jobs, filters) {
     const score = job.fit_score ?? 0
     const roleTrack = job.role_track || inferRoleTrack(job.title)
     const salaryBand = job.salary_band || 'Unknown'
-    const cultureRisk = job.culture_risk || 'Unknown'
-
     if (filters.minFitScore && score < filters.minFitScore) return false
     if (filters.roleTrackFilter !== 'Any' && roleTrack !== filters.roleTrackFilter) return false
     if (
@@ -113,7 +314,6 @@ function filterJobs(jobs, filters) {
     ) {
       return false
     }
-    if (filters.cultureFilter !== 'Any' && cultureRisk !== filters.cultureFilter) return false
     if (filters.showSavedOnly && !filters.savedJobIds.includes(job.id)) return false
     if (filters.minSalary > 0 && (job.salary_max ?? 0) < filters.minSalary) return false
     return true
@@ -150,7 +350,6 @@ export default function App() {
   const [minFitScore, setMinFitScore] = useState(0)
   const [roleTrackFilter, setRoleTrackFilter] = useState('Any')
   const [salaryBandFilter, setSalaryBandFilter] = useState('Any')
-  const [cultureFilter, setCultureFilter] = useState('Any')
   const [showSavedOnly, setShowSavedOnly] = useState(false)
   const [sortMode, setSortMode] = useState('fit_desc')
   const [minSalaryFilter, setMinSalaryFilter] = useState(0)
@@ -210,10 +409,6 @@ export default function App() {
       setCurrentQuery(filter.value)
       return
     }
-    if (filter.type === 'culture') {
-      setCultureFilter(filter.value)
-      return
-    }
     if (filter.type === 'salary') {
       setMinSalaryFilter(filter.value)
     }
@@ -226,7 +421,6 @@ export default function App() {
     setMinFitScore(0)
     setRoleTrackFilter('Any')
     setSalaryBandFilter('Any')
-    setCultureFilter('Any')
     setShowSavedOnly(false)
     setSortMode('fit_desc')
     setMinSalaryFilter(0)
@@ -256,32 +450,26 @@ export default function App() {
         minFitScore,
         roleTrackFilter,
         salaryBandFilter,
-        cultureFilter,
         showSavedOnly,
         savedJobIds,
         minSalary: minSalaryFilter,
       }),
-    [jobs, minFitScore, roleTrackFilter, salaryBandFilter, cultureFilter, showSavedOnly, savedJobIds, minSalaryFilter],
+    [jobs, minFitScore, roleTrackFilter, salaryBandFilter, showSavedOnly, savedJobIds, minSalaryFilter],
   )
 
   const displayJobs = useMemo(() => sortJobs(filteredJobs, sortMode), [filteredJobs, sortMode])
 
   const loadedAnalytics = useMemo(() => {
     const scored = jobs.filter(j => typeof j.fit_score === 'number')
-    const applyNow = scored.filter(j => j.fit_score >= 75)
     const avgFit = scored.length
       ? Math.round(scored.reduce((sum, j) => sum + j.fit_score, 0) / scored.length)
       : null
     const bestFit = scored.length ? Math.max(...scored.map(j => j.fit_score)) : null
     const coreSalary = jobs.filter(j => String(j.salary_band || '').toLowerCase().includes('core target'))
-    const highRisk = jobs.filter(j => String(j.culture_risk || '').toLowerCase().includes('high'))
-
     return {
       bestFit,
       avgFit,
-      applyNowCount: applyNow.length,
       coreSalaryCount: coreSalary.length,
-      highRiskCount: highRisk.length,
     }
   }, [jobs])
 
@@ -298,7 +486,6 @@ export default function App() {
       'Company',
       'Salary',
       'Salary Band',
-      'Culture Risk',
       'Source',
       'Date',
       'Link',
@@ -311,7 +498,6 @@ export default function App() {
       job.company ?? '',
       job.salary ?? '',
       job.salary_band ?? '',
-      job.culture_risk ?? '',
       getSource(job).label,
       job.timestamp ?? '',
       job.link ?? '',
@@ -351,18 +537,22 @@ export default function App() {
             </p>
           </div>
 
-          {analytics && !loading && (
-            <div className="header-stats" aria-label="Board statistics">
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.totalActive}</span>
-                <span className="stat-label">Active Roles</span>
+          <div className="hero-side">
+            <HeroRadar />
+
+            {analytics && !loading && (
+              <div className="header-stats" aria-label="Board statistics">
+                <div className="stat-chip">
+                  <span className="stat-number">{analytics.totalActive}</span>
+                  <span className="stat-label">Active Roles</span>
+                </div>
+                <div className="stat-chip">
+                  <span className="stat-number">{analytics.timeframe ?? 'Last 14 Days'}</span>
+                  <span className="stat-label">Timeframe</span>
+                </div>
               </div>
-              <div className="stat-chip">
-                <span className="stat-number">{analytics.timeframe ?? 'Last 14 Days'}</span>
-                <span className="stat-label">Timeframe</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
@@ -413,6 +603,8 @@ export default function App() {
               ))}
             </div>
 
+            <p className="source-note">Job data from Adzuna and Reed.</p>
+
             <div className="filter-group">
               <label htmlFor="minFit" className="filter-label">Minimum fit score</label>
               <select id="minFit" className="filter-select" value={minFitScore} onChange={e => setMinFitScore(Number(e.target.value))}>
@@ -437,13 +629,6 @@ export default function App() {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="culture" className="filter-label">Culture</label>
-              <select id="culture" className="filter-select" value={cultureFilter} onChange={e => setCultureFilter(e.target.value)}>
-                {CULTURE_OPTIONS.map(option => <option key={option}>{option}</option>)}
-              </select>
-            </div>
-
             <div className="filter-inline">
               <label>
                 <input type="checkbox" checked={showSavedOnly} onChange={e => setShowSavedOnly(e.target.checked)} /> Show saved only
@@ -463,9 +648,7 @@ export default function App() {
 
                 <div className="badge badge-default"><span className="badge-label">Best fit</span><strong>{loadedAnalytics.bestFit ?? 'N/A'}</strong></div>
                 <div className="badge badge-default"><span className="badge-label">Avg fit</span><strong>{loadedAnalytics.avgFit ?? 'N/A'}</strong></div>
-                <div className="badge badge-success"><span className="badge-label">Apply-now roles</span><strong>{loadedAnalytics.applyNowCount}</strong></div>
                 <div className="badge badge-success"><span className="badge-label">Core target salary</span><strong>{loadedAnalytics.coreSalaryCount}</strong></div>
-                <div className="badge badge-alert"><span className="badge-label">High culture-risk</span><strong>{loadedAnalytics.highRiskCount}</strong></div>
                 <div className="badge badge-default"><span className="badge-label">Saved roles</span><strong>{savedJobIds.length}</strong></div>
               </div>
 
@@ -526,7 +709,7 @@ export default function App() {
           ) : displayJobs.length === 0 ? (
             <div className="state-view" aria-live="polite">
               <p className="state-label">No matching roles found.</p>
-              <p className="state-sublabel">Try lowering the fit score, clearing culture filters, or searching a broader term such as Python, Platform, AppSec or Security.</p>
+              <p className="state-sublabel">Try lowering the fit score or searching a broader term such as Python, Platform, AppSec or Security.</p>
             </div>
           ) : (
             <>
@@ -539,7 +722,6 @@ export default function App() {
                   const scoreReasons = parseJsonList(job.score_reasons_json)
                   const roleTrack = job.role_track || inferRoleTrack(job.title)
                   const salaryBand = job.salary_band || 'Unknown'
-                  const cultureRisk = job.culture_risk || 'Unknown'
                   const score = typeof job.fit_score === 'number' ? job.fit_score : null
                   const contractLabel = job.salary_type === 'daily' ? 'Contract day rate' : null
 
@@ -564,15 +746,6 @@ export default function App() {
                       <div className="pill-row">
                         <span className="role-track-pill">{roleTrack}</span>
                         <span className="salary-band-pill">{salaryBand}</span>
-                        <span className={`culture-risk-pill ${
-                          cultureRisk.toLowerCase().includes('low')
-                            ? 'culture-low'
-                            : cultureRisk.toLowerCase().includes('check') || cultureRisk.toLowerCase().includes('possible')
-                              ? 'culture-medium'
-                              : cultureRisk.toLowerCase().includes('high')
-                                ? 'culture-high'
-                                : 'culture-unknown'
-                        }`}>Culture: {cultureRisk}</span>
                       </div>
 
                       <div className="salary-block">
